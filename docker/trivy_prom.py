@@ -36,7 +36,8 @@ CVES = Gauge('docker_swarm_trivy_service_cves',
                  'trivy_result_type',
                  'trivy_vulnerability_severity',
                  'service_name',
-                 'image'
+                 'image',
+                 'image_short'
              ])
 
 PROMETHEUS_EXPORT_PORT = int(os.getenv('PROMETHEUS_EXPORT_PORT', '9000'))
@@ -61,29 +62,29 @@ def run_trivy(last_labels: Dict[Any, Any]):
 
         for service in client.services.list():
             for task in service.tasks():
-                short_image_name = task['Spec']['ContainerSpec']['Image'].split(
-                    '@', 1)[0]
-                images.add(short_image_name)
-                if short_image_name not in service_list:
-                    service_list[short_image_name] = set()
-                service_list[short_image_name].add(service.name)
+                image_name = task['Spec']['ContainerSpec']['Image']
+                images.add(image_name)
+
+                if image_name not in service_list:
+                    service_list[image_name] = set()
+                service_list[image_name].add(service.name)
 
         for image in images:
             try:
                 print_timed(f"scanning image {image}")
                 trivy = subprocess.run([
-                        "trivy",
-                        "--quiet",
-                        "image",
-                        "-f",
-                        "json",
-                        image
-                    ],
+                    "trivy",
+                    "--quiet",
+                    "image",
+                    "-f",
+                    "json",
+                    image
+                ],
                     capture_output=True,
                     env=os.environ
                 )
 
-                try: 
+                try:
                     trivy_response = json.loads(trivy.stdout)
                 except json.decoder.JSONDecodeError:
                     print(trivy.stderr)
@@ -109,6 +110,7 @@ def run_trivy(last_labels: Dict[Any, Any]):
 
                     for _service in service_list[image]:
                         for _severity, _severity_count in _severity_count.items():
+                            short_image_name = image.split('@', 1)[0]
                             _labels = {
                                 'trivy_schema_version': _schema_version,
                                 'trivy_result_target': _target,
@@ -116,18 +118,21 @@ def run_trivy(last_labels: Dict[Any, Any]):
                                 'trivy_result_type': _type,
                                 'trivy_vulnerability_severity': _severity,
                                 'service_name': _service,
-                                'image': image
+                                'image': image,
+                                'image_short': short_image_name
                             }
                             CVES.labels(**_labels).set(
                                 _severity_count
                             )
-                            _seen_labels[frozenset(sorted(_labels.items()))] = _labels
+                            _seen_labels[frozenset(
+                                sorted(_labels.items()))] = _labels
             except:
                 traceback.print_exc()
                 raise
-        
+
         # clean metrics that are not present anymore
-        _dead_labels = set(last_labels.keys()).difference(set(_seen_labels.keys()))
+        _dead_labels = set(last_labels.keys()).difference(
+            set(_seen_labels.keys()))
         for _dead_labels_key in _dead_labels:
             label_values = []
             for key in sorted(last_labels[_dead_labels_key]):
