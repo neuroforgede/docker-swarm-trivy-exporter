@@ -142,8 +142,13 @@ def run_trivy(last_labels: Dict[Any, Any]):
         _dead_labels = set(last_labels.keys()) \
             - set(_seen_labels.keys())
         for _dead_labels_key in _dead_labels:
-            label_values = last_labels[_dead_labels_key].values()
-            CVES.remove(*label_values)
+            _label_data = last_labels[_dead_labels_key]
+
+            if _label_data[image] in failed_image_scans:
+                continue
+
+            _label_values = _label_data.values()
+            CVES.remove(*_label_values)
     finally:
         client.close()
 
