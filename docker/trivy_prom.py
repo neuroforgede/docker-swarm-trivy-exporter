@@ -140,8 +140,7 @@ def run_trivy(last_labels: Dict[Any, Any]):
 
         # clean metrics that are not present anymore
         _dead_labels = set(last_labels.keys()) \
-            - set(_seen_labels.keys()) \
-            - failed_image_scans
+            - set(_seen_labels.keys())
         for _dead_labels_key in _dead_labels:
             label_values = last_labels[_dead_labels_key].values()
             CVES.remove(*label_values)
