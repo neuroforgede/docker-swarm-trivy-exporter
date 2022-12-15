@@ -23,7 +23,8 @@ services:
     environment:
       TRIVY_SLOW: "true"
     deploy:
-      mode: global
+      mode: replicated
+      replicas: 1
       resources:
         limits:
           memory: 256M
