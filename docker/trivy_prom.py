@@ -99,17 +99,17 @@ def run_trivy(last_labels: Dict[Any, Any]):
 
                     vulnerabilities = result.get('Vulnerabilities', [])
 
-                    _severity_count = {}
+                    _severity_counts = {}
 
                     for vulnerability in vulnerabilities:
                         _severity = vulnerability.get("Severity", "unknown")
                         if _severity not in _severity_count:
-                            _severity_count[_severity] = 0
+                            _severity_counts[_severity] = 0
 
-                        _severity_count[_severity] += 1
+                        _severity_counts[_severity] += 1
 
                     for _service in service_list[image]:
-                        for _severity, _severity_count in _severity_count.items():
+                        for _severity, _severity_count in _severity_counts.items():
                             short_image_name = image.split('@', 1)[0]
                             _labels = {
                                 'trivy_schema_version': _schema_version,
