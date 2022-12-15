@@ -41,7 +41,7 @@ CVES = Gauge('docker_swarm_trivy_service_cves',
              ])
 
 PROMETHEUS_EXPORT_PORT = int(os.getenv('PROMETHEUS_EXPORT_PORT', '9000'))
-SCAN_INTERVAL_SECONDS = int(os.getenv('SCAN_INTERVAL_SECONDS', '1'))
+SCAN_INTERVAL_SECONDS = int(os.getenv('SCAN_INTERVAL_SECONDS', '3600'))
 
 
 def print_timed(msg):
