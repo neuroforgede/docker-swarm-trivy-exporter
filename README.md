@@ -45,4 +45,4 @@ scrape_configs:
       port: 9000
 ```
 
-A monitoring solution based on the original swarmprom that includes this can be found at our [Swarmsible repo](https://github.com/neuroforgede/swarmsible/tree/master/environments/test/test-swarm/stacks/02_monitoring)
+A monitoring solution based on the original swarmprom that includes this can be found at our [Swarmsible Stacks repo](https://github.com/neuroforgede/swarmsible-stacks)
