@@ -28,7 +28,7 @@ from typing import Dict, Any
 APP_NAME = "Docker Swarm Trivy exporter"
 
 CVES = Gauge('docker_swarm_trivy_service_cves',
-             'Docker Swarm Trivy CVE',
+             'Docker Swarm Trivy Service CVEs',
              [
                  'trivy_schema_version',
                  'trivy_result_target',
