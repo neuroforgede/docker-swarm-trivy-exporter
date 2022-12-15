@@ -103,7 +103,7 @@ def run_trivy(last_labels: Dict[Any, Any]):
 
                     for vulnerability in vulnerabilities:
                         _severity = vulnerability.get("Severity", "unknown")
-                        if _severity not in _severity_count:
+                        if _severity not in _severity_counts:
                             _severity_counts[_severity] = 0
 
                         _severity_counts[_severity] += 1
