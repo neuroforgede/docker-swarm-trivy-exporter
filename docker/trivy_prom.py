@@ -41,7 +41,7 @@ CVES = Gauge('docker_swarm_trivy_service_cves',
              ])
 
 PROMETHEUS_EXPORT_PORT = int(os.getenv('PROMETHEUS_EXPORT_PORT', '9000'))
-SCAN_INTERVAL_SECONDS = int(os.getenv('SCAN_INTERVAL_SECONDS', '3600'))
+SCAN_INTERVAL_SECONDS = int(os.getenv('SCAN_INTERVAL_SECONDS', '1'))
 
 
 def print_timed(msg):
@@ -59,6 +59,7 @@ def run_trivy(last_labels: Dict[Any, Any]):
     try:
         images = set()
         service_list = {}
+        failed_image_scans = set()
 
         for service in client.services.list():
             for task in service.tasks():
@@ -84,11 +85,18 @@ def run_trivy(last_labels: Dict[Any, Any]):
                     env=os.environ
                 )
 
+                if trivy.returncode != 0:
+                    print(trivy.stderr)
+                    failed_image_scans.add(image)
+                    continue
+
                 try:
                     trivy_response = json.loads(trivy.stdout)
                 except json.decoder.JSONDecodeError:
                     print(trivy.stderr)
+                    failed_image_scans.add(image)
                     continue
+
                 _schema_version = str(trivy_response.get("SchemaVersion", ""))
 
                 results = trivy_response.get("Results", [])
@@ -102,7 +110,7 @@ def run_trivy(last_labels: Dict[Any, Any]):
                     _severity_counts = {}
 
                     for vulnerability in vulnerabilities:
-                        _severity = vulnerability.get("Severity", "unknown")
+                        _severity = vulnerability.get("Severity", "UNKNOWN")
                         if _severity not in _severity_counts:
                             _severity_counts[_severity] = 0
 
@@ -131,12 +139,11 @@ def run_trivy(last_labels: Dict[Any, Any]):
                 raise
 
         # clean metrics that are not present anymore
-        _dead_labels = set(last_labels.keys()).difference(
-            set(_seen_labels.keys()))
+        _dead_labels = set(last_labels.keys()) \
+            - set(_seen_labels.keys()) \
+            - failed_image_scans
         for _dead_labels_key in _dead_labels:
-            label_values = []
-            for key in sorted(last_labels[_dead_labels_key]):
-                label_values.append(last_labels[_dead_labels_key][key])
+            label_values = last_labels[_dead_labels_key].values()
             CVES.remove(*label_values)
     finally:
         client.close()
