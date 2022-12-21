@@ -74,13 +74,14 @@ def run_trivy(last_labels: Dict[Any, Any]):
             try:
                 print_timed(f"scanning image {image}")
                 trivy = subprocess.run([
-                    "trivy",
-                    "--quiet",
-                    "image",
-                    "-f",
-                    "json",
-                    image
-                ],
+                        "trivy",
+                        "--quiet",
+                        "image",
+                        "-f",
+                        "json",
+                        "--cache-dir=/trivycache",
+                        image
+                    ],
                     capture_output=True,
                     env=os.environ
                 )

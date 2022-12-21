@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget apt-transp
 ADD docker /opt/trivy-exporter
 WORKDIR /opt/trivy-exporter
 
+VOLUME ["/trivycache"]
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["python", "-u", "./trivy_prom.py"]
