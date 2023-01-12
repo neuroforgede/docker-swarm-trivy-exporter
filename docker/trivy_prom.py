@@ -83,7 +83,10 @@ def run_trivy(last_labels: Dict[Any, Any]):
                         image
                     ],
                     capture_output=True,
-                    env=os.environ
+                    env={
+                        "TMPDIR": "/trivycache/tmp",
+                        **os.environ,
+                    }
                 )
 
                 if trivy.returncode != 0:
@@ -157,6 +160,10 @@ def run_trivy(last_labels: Dict[Any, Any]):
 
 
 if __name__ == '__main__':
+    isExist = os.path.exists("/trivycache/tmp")
+    if not isExist:
+        os.makedirs("/trivycache/tmp")
+        
     print_timed(f'Start prometheus client on port {PROMETHEUS_EXPORT_PORT}')
     start_http_server(PROMETHEUS_EXPORT_PORT, addr='0.0.0.0')
     try:
