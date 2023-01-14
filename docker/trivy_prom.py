@@ -63,7 +63,8 @@ def run_trivy(last_labels: Dict[Any, Any]):
         failed_image_scans = set()
 
         print_timed("clearing /trivycache/tmp")
-        shutil.rmtree('/trivycache/tmp')
+        shutil.rmtree("/trivycache/tmp")
+        os.makedirs("/trivycache/tmp")
 
         for service in client.services.list():
             for task in service.tasks():
