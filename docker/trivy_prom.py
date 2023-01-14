@@ -24,6 +24,7 @@ import json
 from time import sleep
 import traceback
 from typing import Dict, Any
+import shutil
 
 APP_NAME = "Docker Swarm Trivy exporter"
 
@@ -61,6 +62,9 @@ def run_trivy(last_labels: Dict[Any, Any]):
         service_list = {}
         failed_image_scans = set()
 
+        print_timed("clearing /trivycache/tmp")
+        shutil.rmtree('/trivycache/tmp')
+
         for service in client.services.list():
             for task in service.tasks():
                 image_name = task['Spec']['ContainerSpec']['Image']
@@ -84,8 +88,8 @@ def run_trivy(last_labels: Dict[Any, Any]):
                     ],
                     capture_output=True,
                     env={
-                        "TMPDIR": "/trivycache/tmp",
                         **os.environ,
+                        "TMPDIR": "/trivycache/tmp",
                     }
                 )
 
