@@ -15,7 +15,7 @@ version: "3.8"
 
 services:
   docker-swarm-trivy-exporter:
-    image: neuroforgede/docker-swarm-trivy-exporter:0.1
+    image: ghcr.io/neuroforgede/docker-swarm-trivy-exporter:0.1.0
     networks:
       - net
     volumes:

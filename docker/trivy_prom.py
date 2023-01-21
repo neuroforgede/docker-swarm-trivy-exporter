@@ -25,6 +25,7 @@ import traceback
 from typing import Dict, Any
 from threading import Event
 import signal
+import shutil
 
 exit_event = Event()
 
@@ -35,6 +36,7 @@ def handle_shutdown(signal: Any, frame: Any) -> None:
 
 signal.signal(signal.SIGINT, handle_shutdown)
 signal.signal(signal.SIGTERM, handle_shutdown)
+
 
 APP_NAME = "Docker Swarm Trivy exporter"
 
@@ -72,6 +74,10 @@ def run_trivy(last_labels: Dict[Any, Any]):
         service_list = {}
         failed_image_scans = set()
 
+        print_timed("clearing /trivycache/tmp")
+        shutil.rmtree("/trivycache/tmp")
+        os.makedirs("/trivycache/tmp")
+
         for service in client.services.list():
             for task in service.tasks():
                 image_name = task['Spec']['ContainerSpec']['Image']
@@ -97,8 +103,8 @@ def run_trivy(last_labels: Dict[Any, Any]):
                     ],
                     capture_output=True,
                     env={
-                        "TMPDIR": "/trivycache/tmp",
                         **os.environ,
+                        "TMPDIR": "/trivycache/tmp",
                     }
                 )
 
