@@ -21,9 +21,20 @@ from prometheus_client import start_http_server, Gauge
 import os
 import subprocess
 import json
-from time import sleep
 import traceback
 from typing import Dict, Any
+from threading import Event
+import signal
+
+exit_event = Event()
+
+shutdown: bool = False
+def handle_shutdown(signal: Any, frame: Any) -> None:
+    print_timed(f"received signal {signal}. shutting down...")
+    exit_event.set()
+
+signal.signal(signal.SIGINT, handle_shutdown)
+signal.signal(signal.SIGTERM, handle_shutdown)
 
 APP_NAME = "Docker Swarm Trivy exporter"
 
@@ -71,6 +82,8 @@ def run_trivy(last_labels: Dict[Any, Any]):
                 service_list[image_name].add(service.name)
 
         for image in images:
+            if exit_event.is_set():
+                break
             try:
                 print_timed(f"scanning image {image}")
                 trivy = subprocess.run([
@@ -168,9 +181,9 @@ if __name__ == '__main__':
     start_http_server(PROMETHEUS_EXPORT_PORT, addr='0.0.0.0')
     try:
         _last_labels = {}
-        while True:
+        while not exit_event.is_set():
             _last_labels = run_trivy(_last_labels)
-            sleep(SCAN_INTERVAL_SECONDS)
+            exit_event.wait(SCAN_INTERVAL_SECONDS)
 
     except docker.errors.APIError:
         pass
